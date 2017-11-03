@@ -1,6 +1,12 @@
 /* Define __cdecl for non-Microsoft compilers */
-#if ( !defined(_MSC_VER) && !defined(__cdecl) )
+#if ( !defined( _MSC_VER ) && !defined( __cdecl ))
 #define __cdecl
+#endif
+
+#if ( defined( _MSC_VER ))
+#define _CRTDBG_MAP_ALLOC  
+#include <stdlib.h>  
+#include <crtdbg.h>
 #endif
 
 #include <ctime>
@@ -37,11 +43,12 @@ void printTimeDifference( time_t start, time_t end )
 //
 //
 //
-int __cdecl wmain
-    (
-    IN int      argc,
-    IN wchar_t* args[]
-    )
+int _cdecl execute
+(
+	IN     int      argc,
+	IN     wchar_t* args[],
+	IN OUT wstring& output
+	)
 {
     time_t start = time( NULL );
 
@@ -91,10 +98,33 @@ int __cdecl wmain
     else
     {
         result.PrintConstraintWarnings();
-        result.PrintOutput( modelData );
+
+        wostringstream outputStream;
+        result.PrintOutput( modelData, outputStream );
+        output.append( outputStream.str() );
     }
 
     return( ErrorCode_Success );
+}
+
+//
+//
+//
+int __cdecl wmain
+(
+    IN int      argc,
+    IN wchar_t* args[]
+)
+{
+#if (defined ( _CRTDBG_MAP_ALLOC ))
+    _CrtSetDbgFlag( _CRTDBG_ALLOC_MEM_DF | _CRTDBG_LEAK_CHECK_DF );
+#endif
+
+    wstring output;
+    int ret = execute( argc, args, output );
+    wcout << output;
+
+    return ret;
 }
 
 #if !defined(_MSC_VER)
